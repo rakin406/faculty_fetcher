@@ -16,9 +16,11 @@ class Teacher:
 
 @final
 class FacultyScraper:
+    # FIX: Name and image URL does not load. Use selenium instead of requests and bs4.
     def __init__(self):
         page = requests.get(FACULTIES_URL)
         self.soup = BeautifulSoup(page.content, "lxml")
+        print(self.soup)
 
     def get_teachers(self) -> list[Teacher]:
         teachers: list[Teacher] = []
@@ -30,7 +32,8 @@ class FacultyScraper:
             name = str(profile.get("alt", "Unknown"))
             name = removeExtraWhitespaces(name).title()
 
-            image_path = str(profile["src"])
+            # TODO: Set backup image.
+            image_path = str(profile.get("src"))
             image_url = "https://www.aiub.edu" + image_path
 
             teachers.append(Teacher(name, image_url))
