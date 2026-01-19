@@ -5,6 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from .constants import FACULTIES_URL
+from .utils import removeExtraWhitespaces
 
 
 @dataclass
@@ -21,4 +22,17 @@ class FacultyScraper:
 
     def get_teachers(self) -> list[Teacher]:
         teachers: list[Teacher] = []
+        profiles = self.soup.find_all(
+            "img", {":src": "profile.PersonalOtherInfo.SecondProfilePhoto"}
+        )
+
+        for profile in profiles:
+            name = str(profile.get("alt", "Unknown"))
+            name = removeExtraWhitespaces(name).title()
+
+            image_path = str(profile["src"])
+            image_url = "https://www.aiub.edu" + image_path
+
+            teachers.append(Teacher(name, image_url))
+
         return teachers
