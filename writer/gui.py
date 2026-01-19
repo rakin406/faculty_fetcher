@@ -42,6 +42,7 @@ class MainWindow(QMainWindow):
         scraper = FacultyScraper()
         self.teachers = scraper.get_teachers()
         self.cur_teacher_idx = 0
+        self.tracking_keys = True
 
         # Configure window
         self.setWindowTitle("Faculty Writer")
@@ -68,21 +69,28 @@ class MainWindow(QMainWindow):
         self.image_loader.signals.error.connect(self.show_error)
 
     def keyReleaseEvent(self, event):
-        if isinstance(event, QKeyEvent):
+        if self.tracking_keys and isinstance(event, QKeyEvent):
             key_text = event.text()
 
             # Go to next image.
             # "m" for male, "f" for female
             if key_text == "m" or key_text == "f":
                 self.cur_teacher_idx += 1
+
+                # No more images to show
+                if self.cur_teacher_idx >= len(self.teachers):
+                    self.tracking_keys = False
+                    self.display_end()
+                    return
+
                 self.load_image()
                 self.threadpool.start(self.image_loader)
 
             # TODO: Push to database.
             if key_text == "m":
-                print("Male")
+                pass
             elif key_text == "f":
-                print("Female")
+                pass
 
     def get_cur_image_url(self):
         """Get current image URL"""
@@ -96,6 +104,9 @@ class MainWindow(QMainWindow):
             self.image_label.setPixmap(scaled_pixmap)
         else:
             self.image_label.setText("Failed to load image")
+
+    def display_end(self):
+        self.image_label.setText("No more images to show")
 
     def show_error(self, error_msg: str):
         """Display error message"""
