@@ -4,7 +4,14 @@ version = "0.1.0"
 description = "This program scrapes the faculty list and saves them in a database"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "beautifulsoup4>=4.14.3",
+    "lxml>=6.0.2",
+    "psycopg>=3.3.2",
+    "pyqt6>=6.10.2",
+    "python-dotenv>=1.2.1",
+    "requests>=2.32.5",
+]
 
 [dependency-groups]
 dev = [
