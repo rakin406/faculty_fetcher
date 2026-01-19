@@ -1,0 +1,7 @@
+[project]
+name = "faculty-fetcher"
+version = "0.1.0"
+description = "This program scrapes the faculty list and saves them in a database"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
