@@ -2,7 +2,7 @@ from typing import final, override
 import sys
 
 from PyQt6.QtCore import QSize, Qt, QObject, QRunnable, QThreadPool, pyqtSignal
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QPixmap, QKeyEvent
 from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel
 import requests
 
@@ -11,8 +11,8 @@ from .faculty_scraper import FacultyScraper
 
 @final
 class ImageLoaderSignals(QObject):
-    error = pyqtSignal(str)
     result = pyqtSignal(QPixmap)
+    error = pyqtSignal(str)
 
 
 @final
@@ -54,10 +54,20 @@ class MainWindow(QMainWindow):
         threadpool = QThreadPool()
 
         image_loader = ImageLoader(teachers[0].image_url)
-        image_loader.signals.error.connect(self.show_error)
         image_loader.signals.result.connect(self.display_image)
+        image_loader.signals.error.connect(self.show_error)
 
         threadpool.start(image_loader)
+
+    def keyReleaseEvent(self, event):
+        if isinstance(event, QKeyEvent):
+            key_text = event.text()
+
+            # "m" for male, "f" for female
+            if key_text == "m":
+                print("Male")
+            elif key_text == "f":
+                print("Female")
 
     def display_image(self, pixmap: QPixmap):
         """Display the loaded image"""
