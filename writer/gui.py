@@ -41,33 +41,55 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        # Get teacher profiles
         scraper = FacultyScraper()
-        teachers = scraper.get_teachers()
+        self.teachers = scraper.get_teachers()
+        self.cur_teacher_idx = 0
 
+        # Configure window
         self.setWindowTitle("Faculty Writer")
         self.setFixedSize(QSize(900, 800))
 
+        # Set default label
         self.image_label = QLabel("Loading image...")
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setCentralWidget(self.image_label)
 
-        threadpool = QThreadPool()
+        # Create threadpool
+        self.threadpool = QThreadPool()
 
-        image_loader = ImageLoader(teachers[0].image_url)
-        image_loader.signals.result.connect(self.display_image)
-        image_loader.signals.error.connect(self.show_error)
+        # Create image loader worker
+        self.image_loader = None
+        self.load_image()
 
-        threadpool.start(image_loader)
+        # Start threadpool
+        self.threadpool.start(self.image_loader)
+
+    def load_image(self):
+        self.image_loader = ImageLoader(self.get_cur_image_url())
+        self.image_loader.signals.result.connect(self.display_image)
+        self.image_loader.signals.error.connect(self.show_error)
 
     def keyReleaseEvent(self, event):
         if isinstance(event, QKeyEvent):
             key_text = event.text()
 
+            # Go to next image.
             # "m" for male, "f" for female
+            if key_text == "m" or key_text == "f":
+                self.cur_teacher_idx += 1
+                self.load_image()
+                self.threadpool.start(self.image_loader)
+
+            # TODO: Push to database.
             if key_text == "m":
                 print("Male")
             elif key_text == "f":
                 print("Female")
+
+    def get_cur_image_url(self):
+        """Get current image URL"""
+        return self.teachers[self.cur_teacher_idx].image_url
 
     def display_image(self, pixmap: QPixmap):
         """Display the loaded image"""
