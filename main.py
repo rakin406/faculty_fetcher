@@ -1,5 +1,10 @@
+from writer.faculty_scraper import FacultyScraper
+
+
 def main():
-    print("Hello from faculty-fetcher!")
+    scraper = FacultyScraper()
+    teachers = scraper.get_teachers()
+    print(teachers)
 
 
 if __name__ == "__main__":
