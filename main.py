@@ -1,10 +1,9 @@
-from writer.faculty_scraper import FacultyScraper
+from writer.gui import FacultyWriterApp
 
 
 def main():
-    scraper = FacultyScraper()
-    teachers = scraper.get_teachers()
-    print(teachers)
+    app = FacultyWriterApp()
+    app.run()
 
 
 if __name__ == "__main__":
