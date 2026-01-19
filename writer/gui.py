@@ -17,9 +17,6 @@ class ImageLoaderSignals(QObject):
 
 @final
 class ImageLoader(QRunnable):
-    image_loaded = pyqtSignal(QPixmap)
-    error_occurred = pyqtSignal(str)
-
     def __init__(self, url: str):
         super().__init__()
         self.url = url
