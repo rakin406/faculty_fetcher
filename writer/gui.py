@@ -5,12 +5,14 @@ from pathlib import Path
 from PyQt6.QtCore import QSize, Qt, QObject, QRunnable, QThreadPool, pyqtSignal
 from PyQt6.QtGui import QPixmap, QKeyEvent
 from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel
+from psycopg import sql
 import requests
+from loguru import logger
 
 # Append the parent directory to sys.path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from .faculty_scraper import FacultyScraper
+from .faculty_scraper import Teacher, FacultyScraper
 from db import get_pool, close_pool
 
 
@@ -124,8 +126,20 @@ class MainWindow(QMainWindow):
         """Display error message"""
         self.image_label.setText(f"Error loading image:\n{error_msg}")
 
-    def _save_to_db(self):
-        pass
+    def _save_to_db(self, teacher: Teacher, gender: str):
+        """Save teacher to database"""
+        with self.pool.connection() as conn:
+            with conn.cursor() as cur:
+                query = sql.SQL("INSERT INTO {table} ({fields}) VALUES (%s, %s, %s)").format(
+                    table=sql.Identifier('teachers'),
+                    fields=sql.SQL(',').join([
+                        sql.Identifier('name'),
+                        sql.Identifier('gender'),
+                        sql.Identifier('photo_url')
+                    ]))
+
+                # logger.debug("Saving")
+                _ = cur.execute(query, (teacher.name, gender, teacher.image_url))
 
 
 @final
