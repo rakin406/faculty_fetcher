@@ -86,8 +86,14 @@ class MainWindow(QMainWindow):
         if self.tracking_keys and isinstance(event, QKeyEvent):
             key_text = event.text()
 
-            # Go to next image.
+            # Write to database.
             # "m" for male, "f" for female
+            if key_text == "m":
+                self._save_to_db(self.get_cur_teacher(), "male")
+            elif key_text == "f":
+                self._save_to_db(self.get_cur_teacher(), "female")
+
+            # Go to next image
             if key_text == "m" or key_text == "f":
                 self.cur_teacher_idx += 1
 
@@ -99,12 +105,6 @@ class MainWindow(QMainWindow):
 
                 self.load_image()
                 self.threadpool.start(self.image_loader)
-
-            # Write to database
-            if key_text == "m":
-                self._save_to_db(self.get_cur_teacher(), "male")
-            elif key_text == "f":
-                self._save_to_db(self.get_cur_teacher(), "female")
 
     def get_cur_teacher(self) -> Teacher:
         """Get current teacher"""
