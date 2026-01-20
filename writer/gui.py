@@ -1,12 +1,19 @@
 from typing import final, override
 import sys
+from pathlib import Path
 
 from PyQt6.QtCore import QSize, Qt, QObject, QRunnable, QThreadPool, pyqtSignal
 from PyQt6.QtGui import QPixmap, QKeyEvent
 from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel
+from psycopg import sql
 import requests
+from loguru import logger
 
-from .faculty_scraper import FacultyScraper
+# Append the parent directory to sys.path
+sys.path.append(str(Path(__file__).parent.parent))
+
+from .faculty_scraper import Teacher, FacultyScraper
+from db import get_pool, close_pool
 
 
 @final
@@ -44,6 +51,10 @@ class MainWindow(QMainWindow):
         self.cur_teacher_idx = 0
         self.tracking_keys = True
 
+        # Connect to database
+        self.pool = get_pool()
+        self.pool.open()
+
         # Configure window
         self.setWindowTitle("Faculty Writer")
         self.setFixedSize(QSize(900, 800))
@@ -63,6 +74,9 @@ class MainWindow(QMainWindow):
         # Start threadpool
         self.threadpool.start(self.image_loader)
 
+    def __del__(self):
+        close_pool()
+
     def load_image(self):
         self.image_loader = ImageLoader(self.get_cur_image_url())
         self.image_loader.signals.result.connect(self.display_image)
@@ -72,8 +86,14 @@ class MainWindow(QMainWindow):
         if self.tracking_keys and isinstance(event, QKeyEvent):
             key_text = event.text()
 
-            # Go to next image.
+            # Write to database.
             # "m" for male, "f" for female
+            if key_text == "m":
+                self._save_to_db(self.get_cur_teacher(), "male")
+            elif key_text == "f":
+                self._save_to_db(self.get_cur_teacher(), "female")
+
+            # Go to next image
             if key_text == "m" or key_text == "f":
                 self.cur_teacher_idx += 1
 
@@ -86,13 +106,11 @@ class MainWindow(QMainWindow):
                 self.load_image()
                 self.threadpool.start(self.image_loader)
 
-            # TODO: Push to database.
-            if key_text == "m":
-                pass
-            elif key_text == "f":
-                pass
+    def get_cur_teacher(self) -> Teacher:
+        """Get current teacher"""
+        return self.teachers[self.cur_teacher_idx]
 
-    def get_cur_image_url(self):
+    def get_cur_image_url(self) -> str:
         """Get current image URL"""
         return self.teachers[self.cur_teacher_idx].image_url
 
@@ -111,6 +129,21 @@ class MainWindow(QMainWindow):
     def show_error(self, error_msg: str):
         """Display error message"""
         self.image_label.setText(f"Error loading image:\n{error_msg}")
+
+    def _save_to_db(self, teacher: Teacher, gender: str):
+        """Save teacher to database"""
+        with self.pool.connection() as conn:
+            with conn.cursor() as cur:
+                query = sql.SQL("INSERT INTO {table} ({fields}) VALUES (%s, %s, %s)").format(
+                    table=sql.Identifier('teachers'),
+                    fields=sql.SQL(',').join([
+                        sql.Identifier('name'),
+                        sql.Identifier('gender'),
+                        sql.Identifier('photo_url')
+                    ]))
+
+                _ = cur.execute(query, (teacher.name, gender, teacher.image_url))
+                logger.info("Saved {name} as {gender} to database", name=teacher.name, gender=gender)
 
 
 @final
