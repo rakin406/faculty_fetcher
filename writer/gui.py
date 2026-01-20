@@ -1,12 +1,17 @@
 from typing import final, override
 import sys
+from pathlib import Path
 
 from PyQt6.QtCore import QSize, Qt, QObject, QRunnable, QThreadPool, pyqtSignal
 from PyQt6.QtGui import QPixmap, QKeyEvent
 from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel
 import requests
 
+# Append the parent directory to sys.path
+sys.path.append(str(Path(__file__).parent.parent))
+
 from .faculty_scraper import FacultyScraper
+from db import get_pool, close_pool
 
 
 @final
@@ -44,6 +49,10 @@ class MainWindow(QMainWindow):
         self.cur_teacher_idx = 0
         self.tracking_keys = True
 
+        # Connect to database
+        self.pool = get_pool()
+        self.pool.open()
+
         # Configure window
         self.setWindowTitle("Faculty Writer")
         self.setFixedSize(QSize(900, 800))
@@ -62,6 +71,9 @@ class MainWindow(QMainWindow):
 
         # Start threadpool
         self.threadpool.start(self.image_loader)
+
+    def __del__(self):
+        close_pool()
 
     def load_image(self):
         self.image_loader = ImageLoader(self.get_cur_image_url())
@@ -111,6 +123,9 @@ class MainWindow(QMainWindow):
     def show_error(self, error_msg: str):
         """Display error message"""
         self.image_label.setText(f"Error loading image:\n{error_msg}")
+
+    def _save_to_db(self):
+        pass
 
 
 @final
