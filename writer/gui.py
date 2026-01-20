@@ -138,8 +138,8 @@ class MainWindow(QMainWindow):
                         sql.Identifier('photo_url')
                     ]))
 
-                # logger.debug("Saving")
                 _ = cur.execute(query, (teacher.name, gender, teacher.image_url))
+                logger.info("Saved {name} as {gender} to database", name=teacher.name, gender=gender)
 
 
 @final
