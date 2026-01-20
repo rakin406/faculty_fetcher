@@ -100,13 +100,17 @@ class MainWindow(QMainWindow):
                 self.load_image()
                 self.threadpool.start(self.image_loader)
 
-            # TODO: Push to database.
+            # Write to database
             if key_text == "m":
-                pass
+                self._save_to_db(self.get_cur_teacher(), "male")
             elif key_text == "f":
-                pass
+                self._save_to_db(self.get_cur_teacher(), "female")
 
-    def get_cur_image_url(self):
+    def get_cur_teacher(self) -> Teacher:
+        """Get current teacher"""
+        return self.teachers[self.cur_teacher_idx]
+
+    def get_cur_image_url(self) -> str:
         """Get current image URL"""
         return self.teachers[self.cur_teacher_idx].image_url
 
